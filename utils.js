@@ -1,7 +1,6 @@
-const { Image, createCanvas } = require("canvas");
-const path = require("path");
+import { Image, createCanvas } from "canvas";
+import { join } from "path";
 const squareSize = 1080;
-const fs = require("fs");
 
 const getCroppedImageCoordinates = (canvas) => {
   const { width: canvasWidth, height: canvasHeight } = canvas;
@@ -72,7 +71,7 @@ const loadImage = (imageName) => {
     const image = new Image();
     image.onload = () => resolve(image);
     image.onerror = (err) => reject(err);
-    image.src = path.join(__dirname, imageName);
+    image.src = join(__dirname, imageName);
   });
 };
 
@@ -126,6 +125,4 @@ const generateEgg = async () => {
   return { image, caption };
 };
 
-module.exports = {
-  generateEgg,
-};
+export { generateEgg };
