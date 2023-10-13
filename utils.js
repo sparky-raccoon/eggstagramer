@@ -84,12 +84,19 @@ const loadImages = async () => {
   }
 };
 
+const storeEgg = (buffer, name) => {
+  const eggDirectory = path.join(__dirname, "eggs");
+  if (!fs.existsSync(eggDirectory)) fs.mkdirSync(eggDirectory);
+  const eggPath = path.join(eggDirectory, `${name}.png`);
+  fs.writeFileSync(eggPath, buffer);
+  return eggPath;
+};
+
 const generateEgg = async () => {
-  console.log("Generating egg...");
   const loadedImages = await loadImages();
   const drawingPos = { x: 0, y: 0 };
 
-  const caption = (Math.floor(Math.random() * (Math.pow(2, 29) - 1 + 1)) + 1)
+  const name = (Math.floor(Math.random() * (Math.pow(2, 29) - 1 + 1)) + 1)
     .toString(2)
     .replace(/0/g, "e")
     .replace(/1/g, "g");
@@ -98,8 +105,8 @@ const generateEgg = async () => {
   const context = canvas.getContext("2d");
   const { width: canvasWidth, height: canvasHeight } = canvas;
 
-  for (let i = 0; i < caption.length; i++) {
-    const image = loadedImages[caption[i] === "e" ? 0 : 1];
+  for (let i = 0; i < name.length; i++) {
+    const image = loadedImages[name[i] === "e" ? 0 : 1];
     const { width: imageWidth } = image;
 
     if (drawingPos.x + imageWidth > Math.ceil(canvasWidth / 3)) {
@@ -122,10 +129,11 @@ const generateEgg = async () => {
     Math.ceil(squareSize - height) / 2
   );
 
-  const image = finalCanvas.toBuffer("image/png");
-  return { image, caption };
+  const buffer = finalCanvas.toBuffer("image/png");
+  return { buffer, name };
 };
 
 module.exports = {
   generateEgg,
+  storeEgg,
 };
