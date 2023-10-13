@@ -1,15 +1,9 @@
 require("dotenv").config();
-const express = require("express");
-// const { CronJob } = require("cron");
 const { generateEgg, storeEgg } = require("./utils");
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 
 puppeteer.use(StealthPlugin());
-
-const app = express();
-const port = process.env.PORT || 3000;
-app.listen(port);
 
 const attemptType = async (page, selector, text) => {
   console.log("attemptType", selector, text);
@@ -100,8 +94,7 @@ const post = async () => {
   try {
     console.log("Starting...");
     await post();
-    // const cron = new CronJob("* * * * *", post);
-    // cron.start();
+    process.exit();
   } catch (err) {
     console.log(err);
   }
