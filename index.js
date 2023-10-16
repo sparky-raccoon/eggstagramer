@@ -4,6 +4,7 @@ const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 
 puppeteer.use(StealthPlugin());
+const HEADLESS = true;
 
 const customDelay = async (type = "short") => {
   const delay = (min, max) => {
@@ -37,6 +38,7 @@ const attemptClick = async (page, selector, delayType) => {
   return new Promise(async (resolve, reject) => {
     try {
       await customDelay(delayType);
+      HEADLESS && (await page.screenshot({ path: `${selector.replace(/[^a-zA-Z0-9]/g, "")}.png` }));
       await page.waitForSelector(selector);
       await page.click(selector);
       resolve();
@@ -49,21 +51,37 @@ const attemptClick = async (page, selector, delayType) => {
 const post = async () => {
   return new Promise(async (resolve, reject) => {
     try {
-      const browser = await puppeteer.launch();
+      const browser = await puppeteer.launch({
+        userDataDir: "/tmp/user-data-dir",
+        headless: HEADLESS,
+      });
       const page = await browser.newPage();
       page.setDefaultNavigationTimeout(2 * 60 * 1000);
 
+      const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
+      const chromeUserAgent = headlessUserAgent.replace("HeadlessChrome", "Chrome");
+      await page.setUserAgent(chromeUserAgent);
+      await page.setExtraHTTPHeaders({
+        "accept-language": "en-US,en;q=0.8",
+      });
+
       console.log("Navigating to Instagram...");
-      await page.goto("https://instagram.com", { waitUntil: "networkidle2" });
+      const response = await page.goto("https://instagram.com", { waitUntil: "networkidle2" });
+      const alreadyLoggedIn = await page.evaluate(() => {
+        const loginButton = document.querySelector("button[type='submit']");
+        return loginButton === null;
+      });
 
-      console.log("Rejecting cookies...");
-      await attemptClick(page, 'xpath=//button[contains(text(), "Decline")]');
+      if (!alreadyLoggedIn) {
+        console.log("Rejecting cookies...");
+        await attemptClick(page, 'xpath=//button[contains(text(), "Decline")]');
 
-      console.log("Logging in...");
-      await attemptType(page, 'input[name="username"]', process.env.IG_USERNAME);
-      await attemptType(page, 'input[name="password"]', process.env.IG_PASSWORD);
-      await page.waitForSelector('button[type="submit"]');
-      await Promise.all([page.waitForNavigation(), page.click('button[type="submit"]')]);
+        console.log("Logging in...");
+        await attemptType(page, 'input[name="username"]', process.env.IG_USERNAME);
+        await attemptType(page, 'input[name="password"]', process.env.IG_PASSWORD);
+        await page.waitForSelector('button[type="submit"]');
+        await Promise.all([page.waitForNavigation(), page.click('button[type="submit"]')]);
+      } else console.log("Already logged in...");
 
       console.log("Initiating post...");
       const createPostSelector = "xpath=//a//*[name()='svg' and @aria-label='New post']";
