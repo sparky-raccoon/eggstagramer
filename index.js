@@ -66,7 +66,7 @@ const post = async () => {
       });
 
       console.log("Navigating to Instagram...");
-      const response = await page.goto("https://instagram.com", { waitUntil: "networkidle2" });
+      /* await page.goto("https://instagram.com", { waitUntil: "networkidle2" });
       const alreadyLoggedIn = await page.evaluate(() => {
         const loginButton = document.querySelector("button[type='submit']");
         return loginButton === null;
@@ -125,6 +125,7 @@ const post = async () => {
 
       console.log("Posting to Instagram...", caption);
       await attemptClick(page, "xpath=//div[@role='button' and contains(text(), 'Share')]", "long");
+      */
 
       browser.close();
       resolve();
