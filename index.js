@@ -54,7 +54,6 @@ const post = async () => {
       const browser = await puppeteer.launch({
         headless: HEADLESS,
         userDataDir: "/tmp/user-data-dir",
-        executablePath: "/usr/bin/chromium-browser",
         ignoreHTTPSErrors: true,
         args: [
           "--no-sandbox",
@@ -63,6 +62,7 @@ const post = async () => {
           "--ignore-certificate-errors",
           "--lang=en-US,en;q=0.9",
         ],
+        ...("darwin" ? {} : { executablePath: "/usr/bin/chromium-browser" }),
       });
       const page = await browser.newPage();
       page.setDefaultNavigationTimeout(2 * 60 * 1000);
