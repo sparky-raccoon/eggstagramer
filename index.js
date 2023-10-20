@@ -52,18 +52,27 @@ const post = async () => {
   return new Promise(async (resolve, reject) => {
     try {
       const browser = await puppeteer.launch({
-        userDataDir: "/tmp/user-data-dir",
         headless: HEADLESS,
+        userDataDir: "/tmp/user-data-dir",
+        executablePath: "/usr/bin/chromium-browser",
+        ignoreHTTPSErrors: true,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-sync",
+          "--ignore-certificate-errors",
+          "--lang=en-US,en;q=0.9",
+        ],
       });
       const page = await browser.newPage();
       page.setDefaultNavigationTimeout(2 * 60 * 1000);
 
-      const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
+      /* const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
       const chromeUserAgent = headlessUserAgent.replace("HeadlessChrome", "Chrome");
       await page.setUserAgent(chromeUserAgent);
       await page.setExtraHTTPHeaders({
         "accept-language": "en-US,en;q=0.8",
-      });
+      }); */
 
       console.log("Navigating to Instagram...");
       /* await page.goto("https://instagram.com", { waitUntil: "networkidle2" });
