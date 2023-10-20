@@ -67,6 +67,12 @@ const post = async () => {
       const page = await browser.newPage();
       page.setDefaultNavigationTimeout(2 * 60 * 1000);
 
+      console.log("Generating egg...");
+      const { buffer, name } = await generateEgg();
+
+      console.log("Storing generated egg...");
+      const eggPath = storeEgg(buffer, name);
+
       /* const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
       const chromeUserAgent = headlessUserAgent.replace("HeadlessChrome", "Chrome");
       await page.setUserAgent(chromeUserAgent);
