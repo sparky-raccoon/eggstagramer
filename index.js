@@ -64,15 +64,12 @@ const post = async () => {
         ],
         ...("darwin" ? {} : { executablePath: "/usr/bin/chromium-browser" }),
       });
-      const page = await browser.newPage();
-      page.setDefaultNavigationTimeout(2 * 60 * 1000);
-
-      /* const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
+      const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
       const chromeUserAgent = headlessUserAgent.replace("HeadlessChrome", "Chrome");
       await page.setUserAgent(chromeUserAgent);
-      await page.setExtraHTTPHeaders({
-        "accept-language": "en-US,en;q=0.8",
-      }); */
+
+      const page = await browser.newPage();
+      page.setDefaultNavigationTimeout(2 * 60 * 1000);
 
       console.log("Navigating to Instagram...");
       /* await page.goto("https://instagram.com", { waitUntil: "networkidle2" });
