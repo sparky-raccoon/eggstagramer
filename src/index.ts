@@ -7,26 +7,18 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 puppeteer.use(StealthPlugin());
 const HEADLESS = true;
 
-const customDelay = async (type: 'short' | 'long' = 'short') => {
-  const delay = (min: number, max: number): Promise<void> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve();
-      }, Math.floor(Math.random() * (max - min + 1) + min));
-    });
-  };
-
-  if (type === "short") await delay(1000, 1500);
-  else if (type === "long") await delay(2000, 3000);
+const getRandomDelayNumber = (type: 'short' | 'long' = 'short') => {
+  const min = type === 'short' ? 1000 : 2000;
+  const max = type === 'short' ? 1500 : 3000;
+  return Math.floor(Math.random() * (max - min + 1) + min)
 };
 
-const attemptType = (page: Page, selector: string, text: string, delayType?: 'short' | 'long'): Promise<void> => {
+const attemptType = (page: Page, selector: string, text: string, delayType: 'short' | 'long' = 'short'): Promise<void> => {
   console.log("attemptType", selector, text);
   return new Promise(async (resolve, reject) => {
     try {
-      await customDelay(delayType);
       await page.waitForSelector(selector);
-      await page.type(selector, text, { delay: 100 });
+      await page.type(selector, text, { delay: getRandomDelayNumber(delayType) });
       resolve();
     } catch (err) {
       reject(err);
@@ -34,14 +26,13 @@ const attemptType = (page: Page, selector: string, text: string, delayType?: 'sh
   });
 };
 
-const attemptClick = async (page: Page, selector: string, delayType?: 'short' | 'long'): Promise<void> => {
+const attemptClick = async (page: Page, selector: string, delayType: 'short' | 'long' = 'short'): Promise<void> => {
   console.log("attemptClick", selector);
   return new Promise(async (resolve, reject) => {
     try {
-      await customDelay(delayType);
       HEADLESS && (await page.screenshot({ path: `${selector.replace(/[^a-zA-Z0-9]/g, "")}.png` }));
       await page.waitForSelector(selector);
-      await page.click(selector);
+      await page.click(selector, { delay: getRandomDelayNumber(delayType) });
       resolve();
     } catch (err) {
       reject(err);
@@ -73,7 +64,7 @@ const post = async (): Promise<void> => {
 
       page.setDefaultNavigationTimeout(2 * 60 * 1000);
 
-      /* console.log("Navigating to Instagram...");
+      console.log("Navigating to Instagram...");
       await page.goto("https://instagram.com", { waitUntil: "networkidle2" });
       const alreadyLoggedIn = await page.evaluate(() => {
         const loginButton = document.querySelector("button[type='submit']");
@@ -104,7 +95,7 @@ const post = async (): Promise<void> => {
       console.log("Uploading image...");
       const [fileChooser] = await Promise.all([
         page.waitForFileChooser(),
-        page.click("xpath=//button[contains(text(), 'Select')]"),
+        page.click("xpath=//button[contains(text(), 'Select')]", { delay: getRandomDelayNumber("long") }),
       ]);
       await fileChooser.accept([eggPath]);
 
@@ -132,7 +123,7 @@ const post = async (): Promise<void> => {
       await attemptType(page, "div[role='textbox']", caption);
 
       console.log("Posting to Instagram...", caption);
-      await attemptClick(page, "xpath=//div[@role='button' and contains(text(), 'Share')]", "long"); */
+      await attemptClick(page, "xpath=//div[@role='button' and contains(text(), 'Share')]", "long");
 
       browser.close();
       resolve();
