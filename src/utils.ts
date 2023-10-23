@@ -1,9 +1,10 @@
-const { Image, createCanvas } = require("canvas");
-const path = require("path");
-const squareSize = 1080;
-const fs = require("fs");
+import { Canvas, Image, createCanvas } from "canvas";
+import path from "path";
+import fs from "fs";
 
-const getCroppedImageCoordinates = (canvas) => {
+const squareSize = 1080;
+
+const getCroppedImageCoordinates = (canvas: Canvas) => {
   const { width: canvasWidth, height: canvasHeight } = canvas;
   const context = canvas.getContext("2d");
   const data = context.getImageData(0, 0, canvasWidth, canvasHeight).data;
@@ -67,7 +68,7 @@ const getCroppedImageCoordinates = (canvas) => {
   return { top, right, bottom, left };
 };
 
-const loadImage = (imageName) => {
+const loadImage = (imageName: string): Promise<Image> => {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
@@ -84,7 +85,7 @@ const loadImages = async () => {
   }
 };
 
-const storeEgg = (buffer, name) => {
+const storeEgg = (buffer: Buffer, name: string) => {
   const eggDirectory = path.join(__dirname, "eggs");
   if (!fs.existsSync(eggDirectory)) fs.mkdirSync(eggDirectory);
   const eggPath = path.join(eggDirectory, `${name}.png`);
@@ -92,48 +93,51 @@ const storeEgg = (buffer, name) => {
   return eggPath;
 };
 
-const generateEgg = async () => {
-  const loadedImages = await loadImages();
-  const drawingPos = { x: 0, y: 0 };
+const generateEgg = (): Promise<{ buffer: Buffer, name: string }> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const loadedImages = await loadImages();
+      const drawingPos = { x: 0, y: 0 };
 
-  const name = (Math.floor(Math.random() * (Math.pow(2, 29) - 1 + 1)) + 1)
-    .toString(2)
-    .replace(/0/g, "e")
-    .replace(/1/g, "g");
+      const name = (Math.floor(Math.random() * (Math.pow(2, 29) - 1 + 1)) + 1)
+        .toString(2)
+        .replace(/0/g, "e")
+        .replace(/1/g, "g");
 
-  const canvas = createCanvas(squareSize, squareSize);
-  const context = canvas.getContext("2d");
-  const { width: canvasWidth, height: canvasHeight } = canvas;
+      const canvas = createCanvas(squareSize, squareSize);
+      const context = canvas.getContext("2d");
+      const { width: canvasWidth, height: canvasHeight } = canvas;
 
-  for (let i = 0; i < name.length; i++) {
-    const image = loadedImages[name[i] === "e" ? 0 : 1];
-    const { width: imageWidth } = image;
+      for (let i = 0; i < name.length; i++) {
+        const image = loadedImages[name[i] === "e" ? 0 : 1];
+        const { width: imageWidth } = image;
 
-    if (drawingPos.x + imageWidth > Math.ceil(canvasWidth / 3)) {
-      drawingPos.x = 0;
-      drawingPos.y += loadedImages[0].height;
-    } else drawingPos.x += 10;
+        if (drawingPos.x + imageWidth > Math.ceil(canvasWidth / 3)) {
+          drawingPos.x = 0;
+          drawingPos.y += loadedImages[0].height;
+        } else drawingPos.x += 10;
 
-    context.drawImage(image, drawingPos.x, drawingPos.y);
-  }
+        context.drawImage(image, drawingPos.x, drawingPos.y);
+      }
 
-  const { top, right, bottom, left } = getCroppedImageCoordinates(canvas);
-  const width = right - left;
-  const height = bottom - top;
+      const { top, right, bottom, left } = getCroppedImageCoordinates(canvas);
+      const width = right - left;
+      const height = bottom - top;
 
-  const finalCanvas = createCanvas(squareSize, canvasHeight);
-  const finalContext = finalCanvas.getContext("2d");
-  finalContext.putImageData(
-    context.getImageData(left, top, width, height),
-    Math.ceil(squareSize - width) / 2,
-    Math.ceil(squareSize - height) / 2
-  );
+      const finalCanvas = createCanvas(squareSize, canvasHeight);
+      const finalContext = finalCanvas.getContext("2d");
+      finalContext.putImageData(
+        context.getImageData(left, top, width, height),
+        Math.ceil(squareSize - width) / 2,
+        Math.ceil(squareSize - height) / 2
+      );
 
-  const buffer = finalCanvas.toBuffer("image/png");
-  return { buffer, name };
+      const buffer = finalCanvas.toBuffer("image/png");
+      resolve({ buffer, name });
+    } catch (err) {
+      reject(err);
+    }
+  })
 };
 
-module.exports = {
-  generateEgg,
-  storeEgg,
-};
+export { generateEgg, storeEgg };

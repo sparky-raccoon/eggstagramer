@@ -1,13 +1,14 @@
-require("dotenv").config();
-const { generateEgg, storeEgg } = require("./utils");
-const puppeteer = require("puppeteer-extra");
-const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+import 'dotenv/config';
+import { generateEgg, storeEgg } from './utils';
+import { Page } from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 puppeteer.use(StealthPlugin());
 const HEADLESS = true;
 
-const customDelay = async (type = "short") => {
-  const delay = (min, max) => {
+const customDelay = async (type: 'short' | 'long' = 'short') => {
+  const delay = (min: number, max: number): Promise<void> => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve();
@@ -19,7 +20,7 @@ const customDelay = async (type = "short") => {
   else if (type === "long") await delay(2000, 3000);
 };
 
-const attemptType = (page, selector, text, delayType) => {
+const attemptType = (page: Page, selector: string, text: string, delayType?: 'short' | 'long'): Promise<void> => {
   console.log("attemptType", selector, text);
   return new Promise(async (resolve, reject) => {
     try {
@@ -33,7 +34,7 @@ const attemptType = (page, selector, text, delayType) => {
   });
 };
 
-const attemptClick = async (page, selector, delayType) => {
+const attemptClick = async (page: Page, selector: string, delayType?: 'short' | 'long'): Promise<void> => {
   console.log("attemptClick", selector);
   return new Promise(async (resolve, reject) => {
     try {
@@ -48,7 +49,7 @@ const attemptClick = async (page, selector, delayType) => {
   });
 };
 
-const post = async () => {
+const post = async (): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
       const browser = await puppeteer.launch({
@@ -64,15 +65,16 @@ const post = async () => {
         ],
         ...("darwin" ? {} : { executablePath: "/usr/bin/chromium-browser" }),
       });
+
+      const page = await browser.newPage();
       const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
       const chromeUserAgent = headlessUserAgent.replace("HeadlessChrome", "Chrome");
       await page.setUserAgent(chromeUserAgent);
 
-      const page = await browser.newPage();
       page.setDefaultNavigationTimeout(2 * 60 * 1000);
 
-      console.log("Navigating to Instagram...");
-      /* await page.goto("https://instagram.com", { waitUntil: "networkidle2" });
+      /* console.log("Navigating to Instagram...");
+      await page.goto("https://instagram.com", { waitUntil: "networkidle2" });
       const alreadyLoggedIn = await page.evaluate(() => {
         const loginButton = document.querySelector("button[type='submit']");
         return loginButton === null;
@@ -102,7 +104,7 @@ const post = async () => {
       console.log("Uploading image...");
       const [fileChooser] = await Promise.all([
         page.waitForFileChooser(),
-        page.click("xpath=//button[contains(text(), 'Select')]", "long"),
+        page.click("xpath=//button[contains(text(), 'Select')]"),
       ]);
       await fileChooser.accept([eggPath]);
 
@@ -130,8 +132,7 @@ const post = async () => {
       await attemptType(page, "div[role='textbox']", caption);
 
       console.log("Posting to Instagram...", caption);
-      await attemptClick(page, "xpath=//div[@role='button' and contains(text(), 'Share')]", "long");
-      */
+      await attemptClick(page, "xpath=//div[@role='button' and contains(text(), 'Share')]", "long"); */
 
       browser.close();
       resolve();
