@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test": "ts-node tests/incolumitas.ts",
     "dev": "ts-node src/index.ts",
     "build": "tsc"
   },

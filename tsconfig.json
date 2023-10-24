@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "dist",
     "allowJs": true,
     "target": "es6",
@@ -9,5 +8,5 @@
     "module": "CommonJS",
     "noImplicitAny": true
   },
-  "include": ["./src/**/*"]
+  "include": ["./src/**/*", "tests/incolumitas.ts"]
 }

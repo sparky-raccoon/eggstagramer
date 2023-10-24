@@ -5,7 +5,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 puppeteer.use(StealthPlugin());
-const HEADLESS = true;
+const HEADLESS = true; // or false
 
 const getRandomDelayNumber = (type: 'short' | 'long' = 'short') => {
   const min = type === 'short' ? 1000 : 2000;
@@ -58,13 +58,41 @@ const post = async (): Promise<void> => {
       });
 
       const page = await browser.newPage();
-      const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
-      const chromeUserAgent = headlessUserAgent.replace("HeadlessChrome", "Chrome");
-      await page.setUserAgent(chromeUserAgent);
+      await page.evaluateOnNewDocument(() => {
+        // @ts-ignore
+        delete navigator.__proto__.webdriver;
+      });
+
+      // const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
+      // const chromeUserAgent = headlessUserAgent.replace("HeadlessChrome", "Chrome");
+      // await page.setUserAgent(chromeUserAgent);
 
       page.setDefaultNavigationTimeout(2 * 60 * 1000);
+      await page.goto("https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html", { waitUntil: "networkidle2" });
+      await page.screenshot({ path: 'intoli.png' });
 
-      console.log("Navigating to Instagram...");
+      await page.goto("https://arh.antoinevastel.com/bots/", { waitUntil: "networkidle2" });
+      const table = await page.waitForSelector("#scanner");
+      const rows = await table.$$("tr");
+      const tests: any[] = [];
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const cells = await row.$$("td");
+        if (cells.length < 3) continue;
+        const test = {
+          name: await cells[0].evaluate((node) => node.innerText),
+          result: await cells[1].evaluate((node) => node.innerText),
+          data: await cells[2].evaluate((node) => node.innerText),
+        };
+        tests.push(test);
+      }
+      console.log('tests', tests.filter(t => t.result !== "Consistent"));
+
+      await page.goto("https://antoinevastel.com/bots/datadome", { waitUntil: "networkidle2" });
+      await page.screenshot({ path: 'datadome.png' });
+
+
+      /* console.log("Navigating to Instagram...");
       await page.goto("https://instagram.com", { waitUntil: "networkidle2" });
       const alreadyLoggedIn = await page.evaluate(() => {
         const loginButton = document.querySelector("button[type='submit']");
@@ -124,6 +152,7 @@ const post = async (): Promise<void> => {
 
       console.log("Posting to Instagram...", caption);
       await attemptClick(page, "xpath=//div[@role='button' and contains(text(), 'Share')]", "long");
+      */
 
       browser.close();
       resolve();
